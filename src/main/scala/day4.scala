@@ -9,9 +9,15 @@ object day4 {
       .count(arr => arr(0).subsetOf(arr(1)) | arr(1).subsetOf(arr(0)))
   }
 
+  def findAssignmentPairsWithAnyOverlap(inputArr: Array[String]): Int = {
+    inputArr.map(line => line.split(",").map(s => setFromStringRepr(s)))
+      .count(arr => arr(0).intersect(arr(1)).nonEmpty)
+  }
+
   def main(args: Array[String]): Unit = {
     val source = scala.io.Source.fromFile("day4.txt")
     val input = try source.getLines().toArray finally source.close()
     println(s"Part 1 answer: ${findAssignmentPairsWithOverlappingRanges(input)}")
+    println(s"Part 2 answer: ${findAssignmentPairsWithAnyOverlap(input)}")
   }
 }
