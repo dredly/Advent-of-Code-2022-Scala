@@ -1,7 +1,4 @@
-import day1.{getMostCalories, getTopThreeCaloriesTotal}
-
 import scala.collection.mutable
-import scala.collection.mutable.Stack
 
 object day5 {
   case class Instruction(amount: Int, from: Int, to: Int)
