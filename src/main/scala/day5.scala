@@ -25,18 +25,24 @@ object day5 {
     ).map(numbers => Instruction(numbers.head, numbers(1) - 1, numbers(2) - 1))
   }
 
-  def executeInstruction(crateStacks: Array[mutable.Stack[String]], instruction: Instruction): Unit = {
+  def executeInstruction9000(crateStacks: Array[mutable.Stack[String]], instruction: Instruction): Unit = {
     0.until(instruction.amount).foreach(_ => {
       crateStacks(instruction.to).push(crateStacks(instruction.from).pop())
     })
   }
 
-  def findTops(input: String): String = {
+  def executeInstruction9001(crateStacks: Array[mutable.Stack[String]], instruction: Instruction): Unit = {
+    val taken = crateStacks(instruction.from).take(instruction.amount)
+    taken.foreach(_ => crateStacks(instruction.from).pop())
+    crateStacks(instruction.to).pushAll(taken.toList.reverse)
+  }
+
+  def findTops(input: String, instructionExecutor: Function[(Array[mutable.Stack[String]], Instruction), Unit]): String = {
     val crateStacksAndInstructions = input.split("\n\n").map(section => section.split("\n"))
     val crateStacks = getCrateStacks(crateStacksAndInstructions(0))
     val instructions = getInstructions(crateStacksAndInstructions(1))
     instructions.foreach(instruction => {
-      executeInstruction(crateStacks, instruction)
+      instructionExecutor(crateStacks, instruction)
     })
     crateStacks.map(stack => stack.top).mkString
   }
@@ -44,6 +50,7 @@ object day5 {
   def main(args: Array[String]): Unit = {
     val source = scala.io.Source.fromFile("day5.txt")
     val input = try source.mkString finally source.close()
-    println(s"Part 1 answer: ${findTops(input)}")
+    println(s"Part 1 answer: ${findTops(input, executeInstruction9000)}")
+    println(s"Part 2 answer: ${findTops(input, executeInstruction9001)}")
   }
 }
