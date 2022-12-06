@@ -17,5 +17,6 @@ object day6 {
     val source = scala.io.Source.fromFile("day6.txt")
     val input = try source.mkString finally source.close()
     println(s"Part 1 answer: ${getCharsProcessed(input, 0, 4)}")
+    println(s"Part 2 answer: ${getCharsProcessed(input, 0, 14)}")
   }
 }
