@@ -35,8 +35,8 @@ object day7 {
             getFileList(linesRemaining.tail, updatedDirList, fileList, currentDirectory)
           case "$ cd" =>
             val cdTo: DirectoryNode = if currentLine.substring(5) == ".."
-            then currentDirectory.parent.get
-            else DirectoryNode(currentLine.substring(5), Option(currentDirectory))
+              then currentDirectory.parent.get
+              else DirectoryNode(currentLine.substring(5), Option(currentDirectory))
             getFileList(linesRemaining.tail, dirList, fileList, cdTo)
           case "$ ls" => getFileList(linesRemaining.tail, dirList, fileList, currentDirectory) //Done
           case _ =>
@@ -55,19 +55,28 @@ object day7 {
       case fn: FileNode => getParentSizeContributions(fn.parent, mapSoFar.+(fn.parent -> fn.size))
   }
 
-  def getTotalSize(inputArr: Array[String]): Int = {
+  def getSizes(inputArr: Array[String]): Iterable[Int] = {
     getFileList(inputArr.tail)
       .map(fn => getParentSizeContributions(fn))
       .reduce((m1, m2) => m1.merged(m2)({ case ((k, v1), (_, v2)) => (k, v1 + v2) }))
       .values
-      .filter(size => size <= 100000)
-      .sum
+  }
+
+  def getTotalSize(inputArr: Array[String]): Int = {
+    getSizes(inputArr).filter(size => size <= 100000).sum
+  }
+
+  def getSmallestToDelete(inputArr: Array[String], totalDiskSpace: Int, spaceNeeded: Int): Int = {
+    getSizes(inputArr)
+      .filter(size => size >= getSizes(inputArr).max - (totalDiskSpace - spaceNeeded))
+      .min
   }
 
   def main(args: Array[String]): Unit = {
     val source = scala.io.Source.fromFile("day7.txt")
     val input = try source.getLines().toArray finally source.close()
     println(s"Part 1 answer: ${getTotalSize(input)}")
+    println(s"Part 2 answer: ${getSmallestToDelete(input, 70000000, 30000000)}")
   }
 
 }
