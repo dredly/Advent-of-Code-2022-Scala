@@ -1,7 +1,7 @@
 import scala.annotation.tailrec
 
 object day10 {
-  case class Instruction(amount: Int, cyclesRemaining: Int)
+  case class Instruction(amount: Int, cycles: Int)
 
   def parseInput(inputStr: String): Array[Instruction] = {
     inputStr.split("\n")
@@ -12,43 +12,28 @@ object day10 {
       )
   }
 
-  def updateValue(currentValue: Int, pendingInstructions: Array[Instruction]): Int = {
-    pendingInstructions.length match
-      case 0 => currentValue
-      case _ => pendingInstructions
-        .filter(pi => pi.cyclesRemaining == 0)
-        .map(instruction => instruction.amount)
-        .sum
-        .+(currentValue)
-  }
-
-  def updatePendingInstructions(currentPending: Array[Instruction], newInstruction: Instruction): Array[Instruction] = {
-    currentPending
-      .filter(pi => pi.cyclesRemaining > 0)
-      .map(pi => pi.copy(cyclesRemaining = pi.cyclesRemaining - 1))
-      .:+(newInstruction)
+  def getAddedValues(instruction: Instruction, currentValue: Int): Array[Int] = {
+    1.until(instruction.cycles).map(_ => currentValue).toArray :+ (currentValue + instruction.amount)
   }
 
   @tailrec
-  def getCycleValues(instructions: Array[Instruction], valuesSoFar: Array[Int] = Array(1), pendingInstructions: Array[Instruction] = Array()): Array[Int] = {
+  def getCycleValues(instructions: Array[Instruction], valuesSoFar: Array[Int] = Array(1)): Array[Int] = {
     instructions.length match
       case 0 => valuesSoFar
-      case _ =>
-        getCycleValues(
-          instructions.tail,
-          valuesSoFar :+ updateValue(valuesSoFar.last, pendingInstructions),
-          updatePendingInstructions(pendingInstructions, instructions.head)
-        )
+      case _ =>  getCycleValues(instructions.tail, valuesSoFar ++ getAddedValues(instructions.head, valuesSoFar.last))
   }
 
-  def getValues(input: String): Array[Int] = {
-    getCycleValues(parseInput(input))
+  def sumSignalStrengths(input: String): Int = {
+    getCycleValues(parseInput(input)).zipWithIndex
+      .map((value, idx) => (value, idx + 1))
+      .filter((_, idx) => (idx - 20) % 40 == 0)
+      .map((value, idx) => value * idx)
+      .sum
   }
 
   def main(args: Array[String]): Unit = {
     val source = scala.io.Source.fromFile("day10.txt")
     val input = try source.mkString finally source.close()
-    println(getValues(input).mkString("Array(", ", ", ")"))
+    println(s"Part 1 answer: ${sumSignalStrengths(input)}")
   }
-
 }
