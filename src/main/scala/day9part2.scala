@@ -8,8 +8,8 @@ object day9part2 {
   def moveHead(startingPosition: Point, direction: Direction): Move = {
     direction match
       case UP => Move(startingPosition, startingPosition.copy(y = startingPosition.y + 1))
-      case DOWN => Move(startingPosition ,startingPosition.copy(y = startingPosition.y - 1))
-      case LEFT => Move(startingPosition ,startingPosition.copy(x = startingPosition.x - 1))
+      case DOWN => Move(startingPosition, startingPosition.copy(y = startingPosition.y - 1))
+      case LEFT => Move(startingPosition, startingPosition.copy(x = startingPosition.x - 1))
       case RIGHT => Move(startingPosition, startingPosition.copy(x = startingPosition.x + 1))
   }
 
