@@ -1,4 +1,4 @@
-import day9.{DOWN, Direction, Instruction, LEFT, Point, RIGHT, UP, parseInput}
+import day9.{Direction, Instruction, Point, parseInput, UP, DOWN, LEFT, RIGHT}
 import scala.annotation.tailrec
 
 object day9part2 {
