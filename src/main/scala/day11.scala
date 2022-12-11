@@ -6,7 +6,8 @@ object day11 {
                      operation: Function[Int, Int],
                      divTest: Function[Int, Boolean],
                      throwToIfTrue: Int,
-                     throwToIfFalse: Int
+                     throwToIfFalse: Int,
+                     numInspected: Int
                    )
 
   def parseOperation(inputStr: String): Function[Int, Int] = {
@@ -29,7 +30,8 @@ object day11 {
     val throwToIfTrue = lines(4).split("monkey ")(1).toInt
     val throwToIfFalse = lines(5).split("monkey ")(1).toInt
 
-    Monkey(startingItems, operation, divTest, throwToIfTrue, throwToIfFalse)
+    // Initialise monkeys with a value of 0 for numInspected
+    Monkey(startingItems, operation, divTest, throwToIfTrue, throwToIfFalse, 0)
   }
 
   def parseMonkeys(input: String): Array[Monkey] = {
@@ -46,44 +48,43 @@ object day11 {
       case 0 => monkeys
       case _ =>
         val monkey = monkeys(idx)
-        val worryLevel = monkey.operation(monkey.items.head)
-        println(s"Monkey number $idx, worry level of $worryLevel")
+        val worryLevel = monkey.operation(monkey.items.head) / 3
         val throwToIdx = if monkey.divTest(worryLevel) then monkey.throwToIfTrue else monkey.throwToIfFalse
         val throwTo = monkeys(throwToIdx)
         val throwResults = throwItem(monkey, throwTo.items)
         val updatedMonkeys = monkeys.zipWithIndex.map{ case(m, i) =>
-          if i == idx then m.copy(items = throwResults(0)) else {
+          if i == idx then m.copy(items = throwResults(0), numInspected = m.numInspected + 1) else {
             if i == throwToIdx then m.copy(items = throwResults(1)) else m
           }
         }
-        val myNewWorryLevel = monkey.operation(monkey.items.head) / 3
-        println(s"My new worry level = $myNewWorryLevel")
         takeTurn(updatedMonkeys, idx)
   }
 
   @tailrec
   def doRound(monkeys: Array[Monkey], idx: Int = 0): Array[Monkey] = {
-    println(s"Turn $idx")
     idx - monkeys.length match
       case 0 => monkeys
       case _ => doRound(takeTurn(monkeys, idx), idx + 1)
   }
 
-//  def doRoundBad(monkeys: Array[Monkey]): Array[Monkey] = {
-//    val after0 = takeTurn(monkeys, 0)
-//    val after1 = takeTurn(after0, 1)
-//    val after2 = takeTurn(after1, 2)
-//    val after3= takeTurn(after2, 3)
-//    after3
-//  }
+  @tailrec
+  def doNRounds(monkeys: Array[Monkey], roundsLeft: Int): Array[Monkey] = {
+    roundsLeft match
+      case 0 => monkeys
+      case _ => doNRounds(doRound(monkeys), roundsLeft - 1)
+  }
+
+  def getMonkeyBusiness(inputStr: String, numRounds: Int): Int = {
+    doNRounds(parseMonkeys(inputStr), numRounds)
+      .map(m => m.numInspected)
+      .sorted
+      .takeRight(2)
+      .product
+  }
 
   def main(args: Array[String]): Unit = {
     val source = scala.io.Source.fromFile("day11.txt")
     val input = try source.mkString finally source.close()
-    val monkeys = parseMonkeys(input)
-    //val updatedMonkeys = takeTurn(monkeys, 0)
-    //val updatedMonkeys = doRoundBad(monkeys)
-    val updatedMonkeys = doRound(monkeys)
-    println(updatedMonkeys.mkString("Array(", ", ", ")"))
+    println(s"Part 1 answer = ${getMonkeyBusiness(input, 20)}")
   }
 }
