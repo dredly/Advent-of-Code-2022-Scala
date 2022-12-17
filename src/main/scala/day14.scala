@@ -78,9 +78,52 @@ object day14 {
     placeSand(makeGrid(parseInput(inputStr)), Point(500, 0)).count(n => n.material == SAND)
   }
 
+  def getPyramid(lines: Set[Point], spawnLocation: Point): Set[Node] = {
+    val maxY = lines.maxBy(p => p.y).y
+    val allPoints = 0.to(maxY + 1).flatMap(y => (spawnLocation.x - y).to(spawnLocation.x + y).map(x => Point(x, y))).toSet
+    val airPoints = allPoints.diff(lines)
+    airPoints.map(p => Node(p)).union(lines.map(p => Node(p, ROCK)))
+  }
+
+  def checkAbove(node: Node, previousRow: Set[Node]): Node = {
+    val aboveLeft = previousRow.find(n => n.point.x == node.point.x - 1 & n.point.y == node.point.y - 1).get
+    val above = previousRow.find(n => n.point.x == node.point.x & n.point.y == node.point.y - 1).get
+    val aboveRight = previousRow.find(n => n.point.x == node.point.x + 1 & n.point.y == node.point.y - 1).get
+    val numOfSand = Array(aboveLeft, above, aboveRight).count(n => n.material == SAND)
+    node.material match
+      case ROCK => node
+      case _ => if numOfSand == 0 then node.copy(material = AIR) else node.copy(material = SAND)
+  }
+
+  def fillRowWithSand(row: Array[Node]): Array[Node] = {
+    row.map(n => if n.material == AIR then n.copy(material = SAND) else n)
+  }
+
+  @tailrec
+  def placeSandPart2(pyramid: Set[Node], height: Int, yLevel: Int = 0): Set[Node] = {
+    if yLevel > height then pyramid else {
+      val row = pyramid.filter(n => n.point.y == yLevel).toArray.sortBy(n => n.point.x)
+      val middleNodes = row.drop(2).dropRight(2)
+      val updatedRow = if middleNodes.isEmpty then fillRowWithSand(row) else {
+        val previousRow = pyramid.filter(n => n.point.y == yLevel - 1)
+        val updatedMiddleNodes = middleNodes.map(mn => checkAbove(mn, previousRow))
+        fillRowWithSand(row.take(2)) ++ updatedMiddleNodes ++ fillRowWithSand(row.takeRight(2))
+      }
+      val updatedPyramid = pyramid.filterNot(n => n.point.y == yLevel).union(updatedRow.toSet)
+      placeSandPart2(updatedPyramid, height, yLevel + 1)
+    }
+  }
+
+  def countSandPart2(inputStr: String): Int = {
+    val pyramid = getPyramid(parseInput(inputStr), Point(500, 0))
+    val height = pyramid.maxBy(n => n.point.y).point.y
+    placeSandPart2(pyramid, height).count(n => n.material == SAND)
+  }
+
   def main(args: Array[String]): Unit = {
     val source = scala.io.Source.fromFile("day14.txt")
     val input = try source.mkString finally source.close()
     println(s"Part 1 answer: ${countSand(input)}")
+    println(s"Part 2 answer: ${countSandPart2(input)}")
   }
 }
