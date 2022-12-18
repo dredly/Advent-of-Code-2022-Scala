@@ -39,11 +39,11 @@ object day15 {
   @tailrec
   def combineRanges(ranges: Array[HorizontalRange], idx: Int = 1): Array[HorizontalRange] = {
     if idx == ranges.length then ranges else {
-      val overlappedRanges = ranges.filter(r => ranges(idx).start - r.end <= 1)
+      val (overlappedRanges, notOverlapped) = ranges.take(idx).partition(r => ranges(idx).start - r.end <= 1)
 
       val updatedPrevRanges = if overlappedRanges.isEmpty
       then ranges.take(idx + 1)
-      else Array(overlapRanges(overlappedRanges, ranges(0)))
+      else notOverlapped ++ Array(overlapRanges(overlappedRanges, ranges(idx)))
 
       val newIdx = idx + 1 - (ranges.take(idx + 1).length - updatedPrevRanges.length)
       val updatedRanges = updatedPrevRanges ++ ranges.drop(idx + 1)
@@ -63,9 +63,28 @@ object day15 {
     numHorizontalPositions - numBeacons
   }
 
+  @tailrec
+  def findBeaconPosition(sensors: Array[Sensor], searchSpaceSize: Int, currentRow: Int = 0): Point = {
+    if currentRow > searchSpaceSize then throw Exception("Did not find beacon") else {
+      val relevantSensors = retainRelevantSensors(sensors, currentRow)
+      val ranges = combineRanges(getHorizontalRanges(relevantSensors, currentRow))
+      ranges.length match
+        case 1 => findBeaconPosition(sensors, searchSpaceSize, currentRow + 1)
+        case _ =>
+          val x = ranges(0).end + 1
+          Point(x, currentRow)
+    }
+  }
+
+  def getTuningFrequency(inputStr: String, searchSpaceSize: Int): BigInt = {
+    val beaconLocation = findBeaconPosition(parseLines(inputStr), searchSpaceSize)
+    BigInt(beaconLocation.x) * BigInt(4_000_000) + BigInt(beaconLocation.y)
+  }
+
   def main(args: Array[String]): Unit = {
     val source = scala.io.Source.fromFile("day15.txt")
     val input = try source.mkString finally source.close()
     println(s"Part 1 answer: ${totalNonViablePositionsOnRow(input, 2_000_000)}")
+    println(s"Part 2 answer: ${getTuningFrequency(input, 4_000_000)}")
   }
 }
